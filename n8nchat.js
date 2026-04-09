@@ -114,7 +114,7 @@
             border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
-            transition: transform 0.3s;
+            transition: transform 0.3s, opacity 0.3s;
             font-weight: 500;
             font-family: inherit;
             margin-bottom: 12px;
@@ -181,6 +181,54 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
+        /* Typing indicator */
+        .n8n-chat-widget .typing-indicator {
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-radius: 12px;
+            max-width: 80%;
+            background: var(--chat--color-background);
+            border: 1px solid rgba(133, 79, 255, 0.2);
+            align-self: flex-start;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            height: 40px;
+        }
+
+        .n8n-chat-widget .typing-indicator .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--chat--color-primary);
+            opacity: 0.4;
+            animation: n8n-typing-bounce 1.4s infinite ease-in-out both;
+        }
+
+        .n8n-chat-widget .typing-indicator .dot:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .n8n-chat-widget .typing-indicator .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .n8n-chat-widget .typing-indicator .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes n8n-typing-bounce {
+            0%, 80%, 100% {
+                transform: scale(0.6);
+                opacity: 0.4;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
         .n8n-chat-widget .chat-input {
             padding: 16px;
             background: var(--chat--color-background);
@@ -220,6 +268,12 @@
 
         .n8n-chat-widget .chat-input button:hover {
             transform: scale(1.05);
+        }
+
+        .n8n-chat-widget .chat-input button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .n8n-chat-widget .chat-toggle {
@@ -323,15 +377,15 @@
             fontColor: '#333333'
         },
         bubble: {
-            icon: '',          // URL to a custom image, or empty for default SVG
-            color: '',         // Primary gradient color (defaults to primaryColor)
-            secondaryColor: '' // Secondary gradient color (defaults to secondaryColor)
+            icon: '',
+            color: '',
+            secondaryColor: ''
         },
         newChatButton: {
-            text: 'Send us a message', // Button label text
-            icon: '',                  // URL to a custom image, or empty for default SVG
-            color: '',                 // Primary gradient color (defaults to primaryColor)
-            secondaryColor: ''         // Secondary gradient color (defaults to secondaryColor)
+            text: 'Send us a message',
+            icon: '',
+            color: '',
+            secondaryColor: ''
         }
     };
 
@@ -350,6 +404,7 @@
     window.N8NChatWidgetInitialized = true;
 
     let currentSessionId = '';
+    let isSending = false;
 
     // Create widget container
     const widgetContainer = document.createElement('div');
@@ -377,7 +432,7 @@
         <div class="brand-header">
             <img src="${config.branding.logo}" alt="${config.branding.name}">
             <span>${config.branding.name}</span>
-            <button class="close-button">×</button>
+            <button class="close-button">\u00d7</button>
         </div>
         <div class="new-conversation">
             <h2 class="welcome-text">${config.branding.welcomeText}</h2>
@@ -394,7 +449,7 @@
             <div class="brand-header">
                 <img src="${config.branding.logo}" alt="${config.branding.name}">
                 <span>${config.branding.name}</span>
-                <button class="close-button">×</button>
+                <button class="close-button">\u00d7</button>
             </div>
             <div class="chat-messages"></div>
             <div class="chat-input">
@@ -414,10 +469,8 @@
     toggleButton.className = `chat-toggle${config.style.position === 'left' ? ' position-left' : ''}`;
 
     if (config.bubble.icon) {
-        // Custom image icon
         toggleButton.innerHTML = `<img src="${config.bubble.icon}" alt="Chat">`;
     } else {
-        // Default SVG icon
         toggleButton.innerHTML = defaultBubbleIcon;
     }
 
@@ -435,42 +488,39 @@
         return crypto.randomUUID();
     }
 
-    async function startNewConversation() {
-        currentSessionId = generateUUID();
-        const data = [{
-            action: "loadPreviousSession",
-            sessionId: currentSessionId,
-            route: config.webhook.route,
-            metadata: {
-                userId: ""
-            }
-        }];
+    // Show typing indicator and return the element (so it can be removed later)
+    function showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'typing-indicator';
+        typingDiv.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+        messagesContainer.appendChild(typingDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        return typingDiv;
+    }
 
-        try {
-            const response = await fetch(config.webhook.url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-
-            const responseData = await response.json();
-            chatContainer.querySelector('.brand-header').style.display = 'none';
-            chatContainer.querySelector('.new-conversation').style.display = 'none';
-            chatInterface.classList.add('active');
-
-            const botMessageDiv = document.createElement('div');
-            botMessageDiv.className = 'chat-message bot';
-            botMessageDiv.textContent = Array.isArray(responseData) ? responseData[0].output : responseData.output;
-            messagesContainer.appendChild(botMessageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        } catch (error) {
-            console.error('Error:', error);
+    function removeTypingIndicator(typingDiv) {
+        if (typingDiv && typingDiv.parentNode) {
+            typingDiv.parentNode.removeChild(typingDiv);
         }
     }
 
+    // Open chat interface instantly — NO request to n8n
+    function openChatInterface() {
+        currentSessionId = generateUUID();
+        chatContainer.querySelector('.brand-header').style.display = 'none';
+        chatContainer.querySelector('.new-conversation').style.display = 'none';
+        chatInterface.classList.add('active');
+        textarea.focus();
+    }
+
     async function sendMessage(message) {
+        if (isSending) return;
+        isSending = true;
+
+        // Disable input while sending
+        sendButton.disabled = true;
+        textarea.disabled = true;
+
         const messageData = {
             action: "sendMessage",
             sessionId: currentSessionId,
@@ -481,11 +531,15 @@
             }
         };
 
+        // Show user message
         const userMessageDiv = document.createElement('div');
         userMessageDiv.className = 'chat-message user';
         userMessageDiv.textContent = message;
         messagesContainer.appendChild(userMessageDiv);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        // Show typing indicator
+        const typingIndicator = showTypingIndicator();
 
         try {
             const response = await fetch(config.webhook.url, {
@@ -498,6 +552,9 @@
 
             const data = await response.json();
 
+            // Remove typing indicator
+            removeTypingIndicator(typingIndicator);
+
             const botMessageDiv = document.createElement('div');
             botMessageDiv.className = 'chat-message bot';
             botMessageDiv.textContent = Array.isArray(data) ? data[0].output : data.output;
@@ -505,10 +562,23 @@
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         } catch (error) {
             console.error('Error:', error);
+            removeTypingIndicator(typingIndicator);
+
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'chat-message bot';
+            errorDiv.textContent = 'Sorry, something went wrong. Please try again.';
+            messagesContainer.appendChild(errorDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } finally {
+            isSending = false;
+            sendButton.disabled = false;
+            textarea.disabled = false;
+            textarea.focus();
         }
     }
 
-    newChatBtn.addEventListener('click', startNewConversation);
+    // "Send us a message" button — just opens the chat UI, no fetch
+    newChatBtn.addEventListener('click', openChatInterface);
 
     sendButton.addEventListener('click', () => {
         const message = textarea.value.trim();
