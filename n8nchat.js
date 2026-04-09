@@ -348,8 +348,8 @@
     styleSheet.textContent = styles;
     document.head.appendChild(styleSheet);
 
-    // Default SVG icons
-    const defaultBubbleIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.821.487 3.53 1.338 5L2.5 21.5l4.5-.838A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18c-1.476 0-2.886-.313-4.156-.878l-3.156.586.586-3.156A7.962 7.962 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/></svg>`;
+    // Default SVG icons — NOTE: fill="currentColor" so they inherit the button color
+    const defaultBubbleIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.821.487 3.53 1.338 5L2.5 21.5l4.5-.838A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18c-1.476 0-2.886-.313-4.156-.878l-3.156.586.586-3.156A7.962 7.962 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/></svg>`;
 
     const defaultNewChatIcon = `<svg class="message-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.2L4 17.2V4h16v12z"/></svg>`;
 
@@ -386,6 +386,17 @@
             icon: '',
             color: '',
             secondaryColor: ''
+        },
+        // i18n — customizable labels
+        i18n: {
+            inputPlaceholder: 'Type your message here...',
+            sendButton: 'Send',
+            errorMessage: 'Sorry, something went wrong. Please try again.'
+        },
+        // Session persistence — keeps chat alive on page reload
+        session: {
+            persist: true,       // true = save session in sessionStorage
+            storageKey: 'n8n_chat_session'  // storage key name
         }
     };
 
@@ -396,7 +407,9 @@
             branding: { ...defaultConfig.branding, ...window.ChatWidgetConfig.branding },
             style: { ...defaultConfig.style, ...window.ChatWidgetConfig.style },
             bubble: { ...defaultConfig.bubble, ...window.ChatWidgetConfig.bubble },
-            newChatButton: { ...defaultConfig.newChatButton, ...window.ChatWidgetConfig.newChatButton }
+            newChatButton: { ...defaultConfig.newChatButton, ...window.ChatWidgetConfig.newChatButton },
+            i18n: { ...defaultConfig.i18n, ...window.ChatWidgetConfig.i18n },
+            session: { ...defaultConfig.session, ...window.ChatWidgetConfig.session }
         } : defaultConfig;
 
     // Prevent multiple initializations
@@ -405,6 +418,43 @@
 
     let currentSessionId = '';
     let isSending = false;
+    let chatMessages = []; // in-memory message history for persistence
+
+    // ─── Session persistence helpers ───
+    function saveSession() {
+        if (!config.session.persist) return;
+        try {
+            const payload = {
+                sessionId: currentSessionId,
+                messages: chatMessages
+            };
+            sessionStorage.setItem(config.session.storageKey, JSON.stringify(payload));
+        } catch (e) {
+            // sessionStorage might be unavailable (private browsing, etc.)
+        }
+    }
+
+    function loadSession() {
+        if (!config.session.persist) return null;
+        try {
+            const raw = sessionStorage.getItem(config.session.storageKey);
+            if (!raw) return null;
+            const data = JSON.parse(raw);
+            if (data && data.sessionId && Array.isArray(data.messages)) {
+                return data;
+            }
+        } catch (e) {
+            // ignore parse errors
+        }
+        return null;
+    }
+
+    function clearSession() {
+        if (!config.session.persist) return;
+        try {
+            sessionStorage.removeItem(config.session.storageKey);
+        } catch (e) {}
+    }
 
     // Create widget container
     const widgetContainer = document.createElement('div');
@@ -453,8 +503,8 @@
             </div>
             <div class="chat-messages"></div>
             <div class="chat-input">
-                <textarea placeholder="Type your message here..." rows="1"></textarea>
-                <button type="submit">Send</button>
+                <textarea placeholder="${config.i18n.inputPlaceholder}" rows="1"></textarea>
+                <button type="submit">${config.i18n.sendButton}</button>
             </div>
             <div class="chat-footer">
                 <a href="${config.branding.poweredBy.link}" target="_blank">${config.branding.poweredBy.text}</a>
@@ -488,7 +538,7 @@
         return crypto.randomUUID();
     }
 
-    // Show typing indicator and return the element (so it can be removed later)
+    // Show typing indicator and return the element
     function showTypingIndicator() {
         const typingDiv = document.createElement('div');
         typingDiv.className = 'typing-indicator';
@@ -504,20 +554,46 @@
         }
     }
 
-    // Open chat interface instantly — NO request to n8n
+    // Render a single message bubble in the DOM
+    function renderMessage(role, text) {
+        const div = document.createElement('div');
+        div.className = `chat-message ${role}`;
+        div.textContent = text;
+        messagesContainer.appendChild(div);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Open chat interface — NO request to n8n
     function openChatInterface() {
         currentSessionId = generateUUID();
+        chatMessages = [];
+        saveSession();
+        showChatUI();
+    }
+
+    // Show the chat UI (used by both new and restored sessions)
+    function showChatUI() {
         chatContainer.querySelector('.brand-header').style.display = 'none';
         chatContainer.querySelector('.new-conversation').style.display = 'none';
         chatInterface.classList.add('active');
         textarea.focus();
     }
 
+    // Restore a previous session into the DOM
+    function restoreSession(sessionData) {
+        currentSessionId = sessionData.sessionId;
+        chatMessages = sessionData.messages;
+        showChatUI();
+        // Re-render all saved messages
+        chatMessages.forEach(function(msg) {
+            renderMessage(msg.role, msg.text);
+        });
+    }
+
     async function sendMessage(message) {
         if (isSending) return;
         isSending = true;
 
-        // Disable input while sending
         sendButton.disabled = true;
         textarea.disabled = true;
 
@@ -531,12 +607,10 @@
             }
         };
 
-        // Show user message
-        const userMessageDiv = document.createElement('div');
-        userMessageDiv.className = 'chat-message user';
-        userMessageDiv.textContent = message;
-        messagesContainer.appendChild(userMessageDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        // Show & store user message
+        renderMessage('user', message);
+        chatMessages.push({ role: 'user', text: message });
+        saveSession();
 
         // Show typing indicator
         const typingIndicator = showTypingIndicator();
@@ -551,30 +625,30 @@
             });
 
             const data = await response.json();
-
-            // Remove typing indicator
             removeTypingIndicator(typingIndicator);
 
-            const botMessageDiv = document.createElement('div');
-            botMessageDiv.className = 'chat-message bot';
-            botMessageDiv.textContent = Array.isArray(data) ? data[0].output : data.output;
-            messagesContainer.appendChild(botMessageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            const botText = Array.isArray(data) ? data[0].output : data.output;
+            renderMessage('bot', botText);
+            chatMessages.push({ role: 'bot', text: botText });
+            saveSession();
         } catch (error) {
             console.error('Error:', error);
             removeTypingIndicator(typingIndicator);
 
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'chat-message bot';
-            errorDiv.textContent = 'Sorry, something went wrong. Please try again.';
-            messagesContainer.appendChild(errorDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            renderMessage('bot', config.i18n.errorMessage);
         } finally {
             isSending = false;
             sendButton.disabled = false;
             textarea.disabled = false;
             textarea.focus();
         }
+    }
+
+    // ─── Check for existing session on load ───
+    const existingSession = loadSession();
+    if (existingSession && existingSession.messages.length > 0) {
+        // Restore previous conversation
+        restoreSession(existingSession);
     }
 
     // "Send us a message" button — just opens the chat UI, no fetch
@@ -603,7 +677,7 @@
         chatContainer.classList.toggle('open');
     });
 
-    // Add close button handlers
+    // Close button handlers
     const closeButtons = chatContainer.querySelectorAll('.close-button');
     closeButtons.forEach(button => {
         button.addEventListener('click', () => {
