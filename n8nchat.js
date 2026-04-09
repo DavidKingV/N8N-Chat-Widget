@@ -1,4 +1,4 @@
-// Chat Widget Script 
+// Chat Widget Script
 (function() {
     // Create and inject styles
     const styles = `
@@ -305,15 +305,53 @@
         }
 
         .n8n-chat-widget .chat-toggle svg {
-            width: 24px;
-            height: 24px;
+            width: 32px;
+            height: 32px;
             fill: currentColor;
+            flex-shrink: 0;
         }
 
         .n8n-chat-widget .chat-toggle img {
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        /* Responsive: larger bubble on small screens for easier tapping */
+        @media (max-width: 768px) {
+            .n8n-chat-widget .chat-toggle {
+                width: 56px;
+                height: 56px;
+                border-radius: 28px;
+                bottom: 16px;
+                right: 16px;
+            }
+
+            .n8n-chat-widget .chat-toggle.position-left {
+                right: auto;
+                left: 16px;
+            }
+
+            .n8n-chat-widget .chat-toggle svg,
+            .n8n-chat-widget .chat-toggle img {
+                width: 28px;
+                height: 28px;
+            }
+
+            .n8n-chat-widget .chat-container {
+                width: calc(100vw - 16px);
+                height: calc(100vh - 80px);
+                bottom: 8px;
+                right: 8px;
+                left: 8px;
+                border-radius: 12px;
+            }
+
+            .n8n-chat-widget .chat-container.position-left {
+                right: 8px;
+                left: 8px;
+            }
         }
 
         .n8n-chat-widget .chat-footer {
@@ -395,8 +433,7 @@
         },
         // Session persistence — keeps chat alive on page reload
         session: {
-            persist: true,       // true = save session in sessionStorage
-            storageKey: 'n8n_chat_session'  // storage key name
+            persist: true       // true = save session in sessionStorage
         }
     };
 
@@ -419,6 +456,7 @@
     let currentSessionId = '';
     let isSending = false;
     let chatMessages = []; // in-memory message history for persistence
+    const SESSION_STORAGE_KEY = 'n8n_chat_session'; // internal, not user-configurable
 
     // ─── Session persistence helpers ───
     function saveSession() {
@@ -428,7 +466,7 @@
                 sessionId: currentSessionId,
                 messages: chatMessages
             };
-            sessionStorage.setItem(config.session.storageKey, JSON.stringify(payload));
+            sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(payload));
         } catch (e) {
             // sessionStorage might be unavailable (private browsing, etc.)
         }
@@ -437,7 +475,7 @@
     function loadSession() {
         if (!config.session.persist) return null;
         try {
-            const raw = sessionStorage.getItem(config.session.storageKey);
+            const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
             if (!raw) return null;
             const data = JSON.parse(raw);
             if (data && data.sessionId && Array.isArray(data.messages)) {
@@ -452,7 +490,7 @@
     function clearSession() {
         if (!config.session.persist) return;
         try {
-            sessionStorage.removeItem(config.session.storageKey);
+            sessionStorage.removeItem(SESSION_STORAGE_KEY);
         } catch (e) {}
     }
 
