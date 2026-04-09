@@ -1,4 +1,4 @@
-// Chat Widget Script 
+// Chat Widget Script
 (function() {
     // Create and inject styles
     const styles = `
@@ -40,6 +40,7 @@
             flex-direction: column;
         }
 
+        /* ─── Brand header ─── */
         .n8n-chat-widget .brand-header {
             padding: 16px;
             display: flex;
@@ -71,7 +72,7 @@
             opacity: 1;
         }
 
-        .n8n-chat-widget .brand-header img {
+        .n8n-chat-widget .brand-header img.brand-logo {
             width: 32px;
             height: 32px;
         }
@@ -82,6 +83,85 @@
             color: var(--chat--color-font);
         }
 
+        /* ─── Header menu (three dots) ─── */
+        .n8n-chat-widget .header-menu-wrapper {
+            position: absolute;
+            right: 48px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .n8n-chat-widget .header-menu-btn {
+            background: none;
+            border: none;
+            color: var(--chat--color-font);
+            cursor: pointer;
+            padding: 4px 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+            font-size: 18px;
+            line-height: 1;
+            letter-spacing: 1px;
+        }
+
+        .n8n-chat-widget .header-menu-btn:hover {
+            opacity: 1;
+        }
+
+        .n8n-chat-widget .header-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 4px;
+            background: var(--chat--color-background);
+            border: 1px solid rgba(133, 79, 255, 0.2);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            min-width: 180px;
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        .n8n-chat-widget .header-dropdown.open {
+            display: block;
+        }
+
+        .n8n-chat-widget .header-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 14px;
+            background: none;
+            border: none;
+            color: var(--chat--color-font);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.15s;
+            text-align: left;
+        }
+
+        .n8n-chat-widget .header-dropdown-item:hover {
+            background: rgba(133, 79, 255, 0.08);
+        }
+
+        .n8n-chat-widget .header-dropdown-item svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* ─── Welcome screen ─── */
         .n8n-chat-widget .new-conversation {
             position: absolute;
             top: 50%;
@@ -136,6 +216,7 @@
             margin: 0;
         }
 
+        /* ─── Chat interface ─── */
         .n8n-chat-widget .chat-interface {
             display: none;
             flex-direction: column;
@@ -181,7 +262,7 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
-        /* Typing indicator */
+        /* ─── Typing indicator ─── */
         .n8n-chat-widget .typing-indicator {
             padding: 12px 16px;
             margin: 8px 0;
@@ -229,6 +310,7 @@
             }
         }
 
+        /* ─── Chat input ─── */
         .n8n-chat-widget .chat-input {
             padding: 16px;
             background: var(--chat--color-background);
@@ -276,6 +358,7 @@
             transform: none;
         }
 
+        /* ─── Bubble toggle ─── */
         .n8n-chat-widget .chat-toggle {
             position: fixed;
             bottom: 20px;
@@ -318,7 +401,88 @@
             flex-shrink: 0;
         }
 
-        /* Responsive: larger bubble on small screens for easier tapping */
+        /* ─── Bubble notification badge ─── */
+        .n8n-chat-widget .bubble-notification {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--chat--color-background);
+            color: var(--chat--color-font);
+            padding: 10px 16px;
+            border-radius: 12px 12px 0 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(133, 79, 255, 0.15);
+            font-size: 13px;
+            line-height: 1.4;
+            max-width: 220px;
+            font-family: inherit;
+            animation: n8n-badge-in 0.35s ease-out;
+            cursor: pointer;
+        }
+
+        .n8n-chat-widget .bubble-notification.position-left {
+            right: auto;
+            left: 20px;
+            border-radius: 12px 12px 12px 0;
+        }
+
+        .n8n-chat-widget .bubble-notification .badge-close {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--chat--color-font);
+            color: var(--chat--color-background);
+            border: none;
+            font-size: 18px;
+            line-height: 18px;
+            text-align: center;
+            cursor: pointer;
+            padding: 0;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .n8n-chat-widget .bubble-notification .badge-close:hover {
+            opacity: 1;
+        }
+
+        @keyframes n8n-badge-in {
+            from {
+                opacity: 0;
+                transform: translateY(8px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* ─── Footer ─── */
+        .n8n-chat-widget .chat-footer {
+            padding: 8px;
+            text-align: center;
+            background: var(--chat--color-background);
+            border-top: 1px solid rgba(133, 79, 255, 0.1);
+        }
+
+        .n8n-chat-widget .chat-footer a {
+            color: var(--chat--color-primary);
+            text-decoration: none;
+            font-size: 12px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+            font-family: inherit;
+        }
+
+        .n8n-chat-widget .chat-footer a:hover {
+            opacity: 1;
+        }
+
+        /* ─── Responsive ─── */
         @media (max-width: 768px) {
             .n8n-chat-widget .chat-toggle {
                 width: 56px;
@@ -352,26 +516,17 @@
                 right: 8px;
                 left: 8px;
             }
-        }
 
-        .n8n-chat-widget .chat-footer {
-            padding: 8px;
-            text-align: center;
-            background: var(--chat--color-background);
-            border-top: 1px solid rgba(133, 79, 255, 0.1);
-        }
+            .n8n-chat-widget .bubble-notification {
+                bottom: 76px;
+                right: 16px;
+                max-width: 200px;
+            }
 
-        .n8n-chat-widget .chat-footer a {
-            color: var(--chat--color-primary);
-            text-decoration: none;
-            font-size: 12px;
-            opacity: 0.8;
-            transition: opacity 0.2s;
-            font-family: inherit;
-        }
-
-        .n8n-chat-widget .chat-footer a:hover {
-            opacity: 1;
+            .n8n-chat-widget .bubble-notification.position-left {
+                right: auto;
+                left: 16px;
+            }
         }
     `;
 
@@ -386,7 +541,7 @@
     styleSheet.textContent = styles;
     document.head.appendChild(styleSheet);
 
-    // Default SVG icons — NOTE: fill="currentColor" so they inherit the button color
+    // Default SVG icons
     const defaultBubbleIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.821.487 3.53 1.338 5L2.5 21.5l4.5-.838A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18c-1.476 0-2.886-.313-4.156-.878l-3.156.586.586-3.156A7.962 7.962 0 014 12c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z"/></svg>`;
 
     const defaultNewChatIcon = `<svg class="message-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.2L4 17.2V4h16v12z"/></svg>`;
@@ -417,7 +572,8 @@
         bubble: {
             icon: '',
             color: '',
-            secondaryColor: ''
+            secondaryColor: '',
+            notificationMessage: ''  // Optional text shown as a badge next to the bubble
         },
         newChatButton: {
             text: 'Send us a message',
@@ -425,15 +581,15 @@
             color: '',
             secondaryColor: ''
         },
-        // i18n — customizable labels
         i18n: {
             inputPlaceholder: 'Type your message here...',
             sendButton: 'Send',
-            errorMessage: 'Sorry, something went wrong. Please try again.'
+            errorMessage: 'Sorry, something went wrong. Please try again.',
+            endConversation: 'End conversation',
+            greetingMessage: ''  // Bot greeting shown when a new chat starts (empty = disabled)
         },
-        // Session persistence — keeps chat alive on page reload
         session: {
-            persist: true       // true = save session in sessionStorage
+            persist: true
         }
     };
 
@@ -455,21 +611,20 @@
 
     let currentSessionId = '';
     let isSending = false;
-    let chatMessages = []; // in-memory message history for persistence
-    const SESSION_STORAGE_KEY = 'n8n_chat_session'; // internal, not user-configurable
+    let chatMessages = [];
+    let greetingShown = false; // tracks if the auto-greeting has been shown this session
+    const SESSION_STORAGE_KEY = 'n8n_chat_session';
 
     // ─── Session persistence helpers ───
     function saveSession() {
         if (!config.session.persist) return;
         try {
-            const payload = {
+            sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({
                 sessionId: currentSessionId,
-                messages: chatMessages
-            };
-            sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(payload));
-        } catch (e) {
-            // sessionStorage might be unavailable (private browsing, etc.)
-        }
+                messages: chatMessages,
+                greetingShown: greetingShown
+            }));
+        } catch (e) {}
     }
 
     function loadSession() {
@@ -481,9 +636,7 @@
             if (data && data.sessionId && Array.isArray(data.messages)) {
                 return data;
             }
-        } catch (e) {
-            // ignore parse errors
-        }
+        } catch (e) {}
         return null;
     }
 
@@ -494,11 +647,10 @@
         } catch (e) {}
     }
 
-    // Create widget container
+    // ─── Build DOM ───
     const widgetContainer = document.createElement('div');
     widgetContainer.className = 'n8n-chat-widget';
 
-    // Set CSS variables for colors
     widgetContainer.style.setProperty('--n8n-chat-primary-color', config.style.primaryColor);
     widgetContainer.style.setProperty('--n8n-chat-secondary-color', config.style.secondaryColor);
     widgetContainer.style.setProperty('--n8n-chat-background-color', config.style.backgroundColor);
@@ -511,14 +663,13 @@
     const chatContainer = document.createElement('div');
     chatContainer.className = `chat-container${config.style.position === 'left' ? ' position-left' : ''}`;
 
-    // Build the "new chat" button icon
     const newChatButtonIcon = config.newChatButton.icon
         ? `<img class="message-icon" src="${config.newChatButton.icon}" alt="">`
         : defaultNewChatIcon;
 
     const newConversationHTML = `
         <div class="brand-header">
-            <img src="${config.branding.logo}" alt="${config.branding.name}">
+            <img class="brand-logo" src="${config.branding.logo}" alt="${config.branding.name}">
             <span>${config.branding.name}</span>
             <button class="close-button">\u00d7</button>
         </div>
@@ -535,8 +686,17 @@
     const chatInterfaceHTML = `
         <div class="chat-interface">
             <div class="brand-header">
-                <img src="${config.branding.logo}" alt="${config.branding.name}">
+                <img class="brand-logo" src="${config.branding.logo}" alt="${config.branding.name}">
                 <span>${config.branding.name}</span>
+                <div class="header-menu-wrapper">
+                    <button class="header-menu-btn" aria-label="Menu">\u22EE</button>
+                    <div class="header-dropdown">
+                        <button class="header-dropdown-item" data-action="end-conversation">
+                            <svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07" stroke-width="1.5"/></svg>
+                            ${config.i18n.endConversation}
+                        </button>
+                    </div>
+                </div>
                 <button class="close-button">\u00d7</button>
             </div>
             <div class="chat-messages"></div>
@@ -552,10 +712,9 @@
 
     chatContainer.innerHTML = newConversationHTML + chatInterfaceHTML;
 
-    // Build the toggle (bubble) button
+    // Toggle bubble
     const toggleButton = document.createElement('button');
     toggleButton.className = `chat-toggle${config.style.position === 'left' ? ' position-left' : ''}`;
-
     if (config.bubble.icon) {
         toggleButton.innerHTML = `<img src="${config.bubble.icon}" alt="Chat">`;
     } else {
@@ -564,19 +723,50 @@
 
     widgetContainer.appendChild(chatContainer);
     widgetContainer.appendChild(toggleButton);
+
+    // ─── Bubble notification badge ───
+    let notificationBadge = null;
+    if (config.bubble.notificationMessage) {
+        notificationBadge = document.createElement('div');
+        notificationBadge.className = `bubble-notification${config.style.position === 'left' ? ' position-left' : ''}`;
+        notificationBadge.innerHTML = `
+            <button class="badge-close">\u00d7</button>
+            ${config.bubble.notificationMessage}
+        `;
+        widgetContainer.appendChild(notificationBadge);
+
+        // Close badge
+        notificationBadge.querySelector('.badge-close').addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationBadge.remove();
+            notificationBadge = null;
+        });
+
+        // Click badge → open chat
+        notificationBadge.addEventListener('click', () => {
+            chatContainer.classList.add('open');
+            notificationBadge.remove();
+            notificationBadge = null;
+        });
+    }
+
     document.body.appendChild(widgetContainer);
 
+    // ─── References ───
     const newChatBtn = chatContainer.querySelector('.new-chat-btn');
     const chatInterface = chatContainer.querySelector('.chat-interface');
     const messagesContainer = chatContainer.querySelector('.chat-messages');
     const textarea = chatContainer.querySelector('textarea');
     const sendButton = chatContainer.querySelector('button[type="submit"]');
+    const menuBtn = chatContainer.querySelector('.header-menu-btn');
+    const dropdown = chatContainer.querySelector('.header-dropdown');
+    const endConversationBtn = chatContainer.querySelector('[data-action="end-conversation"]');
 
     function generateUUID() {
         return crypto.randomUUID();
     }
 
-    // Show typing indicator and return the element
+    // ─── Typing indicator ───
     function showTypingIndicator() {
         const typingDiv = document.createElement('div');
         typingDiv.className = 'typing-indicator';
@@ -592,7 +782,7 @@
         }
     }
 
-    // Render a single message bubble in the DOM
+    // ─── Render message ───
     function renderMessage(role, text) {
         const div = document.createElement('div');
         div.className = `chat-message ${role}`;
@@ -601,33 +791,61 @@
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
-    // Open chat interface — NO request to n8n
-    function openChatInterface() {
-        currentSessionId = generateUUID();
-        chatMessages = [];
+    // ─── Show greeting (simulated bot message on new chat) ───
+    function showGreetingIfNeeded() {
+        if (greetingShown || !config.i18n.greetingMessage) return;
+        greetingShown = true;
+        renderMessage('bot', config.i18n.greetingMessage);
+        chatMessages.push({ role: 'bot', text: config.i18n.greetingMessage });
         saveSession();
-        showChatUI();
     }
 
-    // Show the chat UI (used by both new and restored sessions)
+    // ─── Show/hide chat UI ───
     function showChatUI() {
         chatContainer.querySelector('.brand-header').style.display = 'none';
         chatContainer.querySelector('.new-conversation').style.display = 'none';
         chatInterface.classList.add('active');
+    }
+
+    function openChatInterface() {
+        currentSessionId = generateUUID();
+        chatMessages = [];
+        greetingShown = false;
+        saveSession();
+        showChatUI();
+        showGreetingIfNeeded();
         textarea.focus();
     }
 
-    // Restore a previous session into the DOM
     function restoreSession(sessionData) {
         currentSessionId = sessionData.sessionId;
         chatMessages = sessionData.messages;
+        greetingShown = sessionData.greetingShown || false;
         showChatUI();
-        // Re-render all saved messages
         chatMessages.forEach(function(msg) {
             renderMessage(msg.role, msg.text);
         });
     }
 
+    function resetToWelcomeScreen() {
+        // Clear state
+        currentSessionId = '';
+        chatMessages = [];
+        greetingShown = false;
+        clearSession();
+
+        // Clear DOM
+        messagesContainer.innerHTML = '';
+        chatInterface.classList.remove('active');
+        dropdown.classList.remove('open');
+
+        // Show welcome screen again
+        const headers = chatContainer.querySelectorAll('.brand-header');
+        headers.forEach(h => h.style.display = '');
+        chatContainer.querySelector('.new-conversation').style.display = '';
+    }
+
+    // ─── Send message ───
     async function sendMessage(message) {
         if (isSending) return;
         isSending = true;
@@ -645,20 +863,16 @@
             }
         };
 
-        // Show & store user message
         renderMessage('user', message);
         chatMessages.push({ role: 'user', text: message });
         saveSession();
 
-        // Show typing indicator
         const typingIndicator = showTypingIndicator();
 
         try {
             const response = await fetch(config.webhook.url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(messageData)
             });
 
@@ -672,7 +886,6 @@
         } catch (error) {
             console.error('Error:', error);
             removeTypingIndicator(typingIndicator);
-
             renderMessage('bot', config.i18n.errorMessage);
         } finally {
             isSending = false;
@@ -682,16 +895,18 @@
         }
     }
 
-    // ─── Check for existing session on load ───
+    // ─── Restore existing session on page load ───
     const existingSession = loadSession();
     if (existingSession && existingSession.messages.length > 0) {
-        // Restore previous conversation
         restoreSession(existingSession);
     }
 
-    // "Send us a message" button — just opens the chat UI, no fetch
+    // ─── Event listeners ───
+
+    // Welcome screen → open chat
     newChatBtn.addEventListener('click', openChatInterface);
 
+    // Send button
     sendButton.addEventListener('click', () => {
         const message = textarea.value.trim();
         if (message) {
@@ -700,6 +915,7 @@
         }
     });
 
+    // Enter to send
     textarea.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -711,15 +927,36 @@
         }
     });
 
+    // Toggle bubble
     toggleButton.addEventListener('click', () => {
         chatContainer.classList.toggle('open');
+        // Hide notification badge when chat opens
+        if (notificationBadge && chatContainer.classList.contains('open')) {
+            notificationBadge.remove();
+            notificationBadge = null;
+        }
     });
 
-    // Close button handlers
-    const closeButtons = chatContainer.querySelectorAll('.close-button');
-    closeButtons.forEach(button => {
+    // Close buttons
+    chatContainer.querySelectorAll('.close-button').forEach(button => {
         button.addEventListener('click', () => {
             chatContainer.classList.remove('open');
         });
+    });
+
+    // ─── Header menu ───
+    menuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('open');
+    });
+
+    // Close dropdown on click outside
+    document.addEventListener('click', () => {
+        dropdown.classList.remove('open');
+    });
+
+    // End conversation
+    endConversationBtn.addEventListener('click', () => {
+        resetToWelcomeScreen();
     });
 })();
