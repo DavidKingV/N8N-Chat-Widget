@@ -38,6 +38,11 @@
         .n8n-chat-widget .chat-container.open {
             display: flex;
             flex-direction: column;
+            animation: n8n-badge-in 0.35s ease-out;
+        }
+
+        .n8n-chat-widget .chat-container.closing {
+          animation: n8n-badge-out 0.25s ease-in forwards;
         }
 
         /* ─── Brand header ─── */
@@ -64,7 +69,7 @@
             align-items: center;
             justify-content: center;
             transition: color 0.2s;
-            font-size: 20px;
+            font-size: 2.5em;
             opacity: 0.6;
         }
 
@@ -102,7 +107,7 @@
             justify-content: center;
             opacity: 0.6;
             transition: opacity 0.2s;
-            font-size: 18px;
+            font-size: 2em;
             line-height: 1;
             letter-spacing: 1px;
         }
@@ -404,16 +409,15 @@
         /* ─── Bubble notification badge ─── */
         .n8n-chat-widget .bubble-notification {
             position: fixed;
-            bottom: 80px;
+            bottom: 90px;
             right: 20px;
             z-index: 1000;
             background: var(--chat--color-background);
             color: var(--chat--color-font);
             padding: 10px 16px;
             border-radius: 12px 12px 0 12px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-            border: 1px solid rgba(133, 79, 255, 0.15);
-            font-size: 13px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 1.12);
+            font-size: 18px;
             line-height: 1.4;
             max-width: 220px;
             font-family: inherit;
@@ -429,20 +433,20 @@
 
         .n8n-chat-widget .bubble-notification .badge-close {
             position: absolute;
-            top: -6px;
-            right: -6px;
-            width: 18px;
-            height: 18px;
+            top: 6px;
+            right: 6px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             background: var(--chat--color-font);
             color: var(--chat--color-background);
             border: none;
-            font-size: 18px;
+            font-size: 11px;
             line-height: 18px;
             text-align: center;
             cursor: pointer;
             padding: 0;
-            opacity: 0.7;
+            opacity: 1;
             transition: opacity 0.2s;
         }
 
@@ -459,6 +463,17 @@
                 opacity: 1;
                 transform: translateY(0) scale(1);
             }
+        }
+
+        @keyframes n8n-badge-out {
+          from {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+          to {
+            opacity: 0;
+            transform: translateY(10px) scale(0.95);
+          }
         }
 
         /* ─── Footer ─── */
@@ -941,6 +956,7 @@
     chatContainer.querySelectorAll('.close-button').forEach(button => {
         button.addEventListener('click', () => {
             chatContainer.classList.remove('open');
+            chatContainer.classList.toggle('close');
         });
     });
 
