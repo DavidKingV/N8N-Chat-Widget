@@ -16,7 +16,7 @@
 
         .n8n-chat-widget .chat-container {
             position: fixed;
-            bottom: 20px;
+            bottom: 100px;
             right: 20px;
             z-index: 1000;
             display: none;
@@ -33,6 +33,17 @@
         .n8n-chat-widget .chat-container.position-left {
             right: auto;
             left: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .n8n-chat-widget .chat-container {
+                bottom: 0;
+                right: 0;
+                left: 0;
+                width: 100%;
+                height: 100dvh;
+                border-radius: 0;
+            }
         }
 
         .n8n-chat-widget .chat-container.open {
@@ -78,8 +89,12 @@
         }
 
         .n8n-chat-widget .brand-header img.brand-logo {
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: center;
+            flex-shrink: 0;
         }
 
         .n8n-chat-widget .brand-header span {
@@ -375,12 +390,13 @@
             color: white;
             border: none;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(133, 79, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
             z-index: 999;
-            transition: transform 0.3s;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
             display: flex;
             align-items: center;
             justify-content: center;
+            animation: n8n-bubble-pulse 2.5s ease-in-out infinite;
         }
 
         .n8n-chat-widget .chat-toggle.position-left {
@@ -389,7 +405,18 @@
         }
 
         .n8n-chat-widget .chat-toggle:hover {
-            transform: scale(1.05);
+            transform: scale(1.12);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            animation-play-state: paused;
+        }
+
+        .n8n-chat-widget .bubble-notification .unread-count {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--chat--color-primary);
+            opacity: 0.85;
         }
 
         .n8n-chat-widget .chat-toggle svg {
@@ -414,10 +441,10 @@
             z-index: 1000;
             background: var(--chat--color-background);
             color: var(--chat--color-font);
-            padding: 10px 16px;
+            padding: 12px 16px 12px 16px;
             border-radius: 12px 12px 0 12px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 1.12);
-            font-size: 18px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+            font-size: 15px;
             line-height: 1.4;
             max-width: 220px;
             font-family: inherit;
@@ -433,20 +460,20 @@
 
         .n8n-chat-widget .bubble-notification .badge-close {
             position: absolute;
-            top: 6px;
-            right: 6px;
+            top: -8px;
+            right: -8px;
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background: var(--chat--color-font);
-            color: var(--chat--color-background);
-            border: none;
+            background: #666;
+            color: #fff;
+            border: 2px solid var(--chat--color-background);
             font-size: 11px;
-            line-height: 18px;
+            line-height: 16px;
             text-align: center;
             cursor: pointer;
             padding: 0;
-            opacity: 1;
+            opacity: 0.8;
             transition: opacity 0.2s;
         }
 
@@ -455,25 +482,20 @@
         }
 
         @keyframes n8n-badge-in {
-            from {
-                opacity: 0;
-                transform: translateY(8px) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+            0%   { opacity: 0; transform: translateY(20px) scale(0.92); }
+            70%  { opacity: 1; transform: translateY(-4px) scale(1.01); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         @keyframes n8n-badge-out {
-          from {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-          to {
-            opacity: 0;
-            transform: translateY(10px) scale(0.95);
-          }
+            from { opacity: 1; transform: translateY(0) scale(1); }
+            to   { opacity: 0; transform: translateY(16px) scale(0.96); }
+        }
+
+        @keyframes n8n-bubble-pulse {
+            0%   { transform: scale(1);    box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+            50%  { transform: scale(1.06); box-shadow: 0 6px 20px rgba(0,0,0,0.32); }
+            100% { transform: scale(1);    box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
         }
 
         /* ─── Footer ─── */
@@ -601,7 +623,12 @@
             sendButton: 'Send',
             errorMessage: 'Sorry, something went wrong. Please try again.',
             endConversation: 'End conversation',
-            greetingMessage: ''  // Bot greeting shown when a new chat starts (empty = disabled)
+            greetingMessage: '',  // Bot greeting shown when a new chat starts (empty = disabled)
+            resumeMessage: ''    // Badge shown when chat is closed but session is active
+        },
+        sounds: {
+            notificationSound: true,  // Plays when the bubble notification badge appears on load
+            messageSound: true        // Plays when a bot message arrives while the chat is closed
         },
         session: {
             persist: true
@@ -617,6 +644,7 @@
             bubble: { ...defaultConfig.bubble, ...window.ChatWidgetConfig.bubble },
             newChatButton: { ...defaultConfig.newChatButton, ...window.ChatWidgetConfig.newChatButton },
             i18n: { ...defaultConfig.i18n, ...window.ChatWidgetConfig.i18n },
+            sounds: { ...defaultConfig.sounds, ...(window.ChatWidgetConfig.sounds || {}) },
             session: { ...defaultConfig.session, ...window.ChatWidgetConfig.session }
         } : defaultConfig;
 
@@ -626,6 +654,7 @@
 
     let currentSessionId = '';
     let isSending = false;
+    let unreadCount = 0;
     let chatMessages = [];
     let greetingShown = false; // tracks if the auto-greeting has been shown this session
     const SESSION_STORAGE_KEY = 'n8n_chat_session';
@@ -750,6 +779,18 @@
         `;
         widgetContainer.appendChild(notificationBadge);
 
+        if (config.sounds.notificationSound) {
+            const playOnInteraction = () => {
+                playSound('notification');
+                ['click', 'keydown', 'scroll', 'touchstart'].forEach(ev =>
+                    document.removeEventListener(ev, playOnInteraction)
+                );
+            };
+            ['click', 'keydown', 'scroll', 'touchstart'].forEach(ev =>
+                document.addEventListener(ev, playOnInteraction, { once: true, passive: true })
+            );
+        }
+
         // Close badge
         notificationBadge.querySelector('.badge-close').addEventListener('click', (e) => {
             e.stopPropagation();
@@ -760,6 +801,7 @@
         // Click badge → open chat
         notificationBadge.addEventListener('click', () => {
             chatContainer.classList.add('open');
+            clearUnread();
             notificationBadge.remove();
             notificationBadge = null;
         });
@@ -813,6 +855,97 @@
         renderMessage('bot', config.i18n.greetingMessage);
         chatMessages.push({ role: 'bot', text: config.i18n.greetingMessage });
         saveSession();
+    }
+
+    // ─── Unread counter — shown inside resumeMessage bubble ───
+    function updateUnreadBadge() {
+        if (!notificationBadge) {
+            if (unreadCount > 0) showResumeNotification();
+            return;
+        }
+        const countEl = notificationBadge.querySelector('.unread-count');
+        if (unreadCount === 0) {
+            if (countEl) countEl.remove();
+            return;
+        }
+        const label = unreadCount === 1 ? '1 mensaje nuevo' : `${unreadCount > 99 ? '99+' : unreadCount} mensajes nuevos`;
+        if (countEl) {
+            countEl.textContent = label;
+        } else {
+            const span = document.createElement('span');
+            span.className = 'unread-count';
+            span.textContent = label;
+            notificationBadge.appendChild(span);
+        }
+    }
+
+    function clearUnread() {
+        unreadCount = 0;
+        if (notificationBadge) {
+            const countEl = notificationBadge.querySelector('.unread-count');
+            if (countEl) countEl.remove();
+        }
+    }
+
+    // ─── Audio ───
+    function playSound(type) {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const gain = ctx.createGain();
+            gain.connect(ctx.destination);
+
+            if (type === 'notification') {
+                // Two-tone friendly chime: low then high
+                [[520, 0, 0.12], [780, 0.13, 0.18]].forEach(([freq, start, end]) => {
+                    const osc = ctx.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+                    gain.gain.setValueAtTime(0, ctx.currentTime + start);
+                    gain.gain.linearRampToValueAtTime(0.35, ctx.currentTime + start + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + end);
+                    osc.connect(gain);
+                    osc.start(ctx.currentTime + start);
+                    osc.stop(ctx.currentTime + end + 0.05);
+                });
+            } else {
+                // Single soft pop for incoming message
+                const osc = ctx.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(640, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+                osc.connect(gain);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.25);
+            }
+
+            setTimeout(() => ctx.close(), 600);
+        } catch (e) {}
+    }
+
+    // ─── Show resume badge when session is active and chat is closed ───
+    function showResumeNotification() {
+        if (!config.i18n.resumeMessage || !currentSessionId) return;
+        if (notificationBadge) { notificationBadge.remove(); notificationBadge = null; }
+        notificationBadge = document.createElement('div');
+        notificationBadge.className = `bubble-notification${config.style.position === 'left' ? ' position-left' : ''}`;
+        notificationBadge.innerHTML = `
+            <button class="badge-close">×</button>
+            ${config.i18n.resumeMessage}
+        `;
+        widgetContainer.appendChild(notificationBadge);
+        notificationBadge.querySelector('.badge-close').addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationBadge.remove();
+            notificationBadge = null;
+        });
+        notificationBadge.addEventListener('click', () => {
+            chatContainer.classList.add('open');
+            clearUnread();
+            notificationBadge.remove();
+            notificationBadge = null;
+        });
     }
 
     // ─── Show/hide chat UI ───
@@ -898,6 +1031,11 @@
             renderMessage('bot', botText);
             chatMessages.push({ role: 'bot', text: botText });
             saveSession();
+            if (!chatContainer.classList.contains('open')) {
+                unreadCount++;
+                updateUnreadBadge();
+                if (config.sounds.messageSound) playSound('message');
+            }
         } catch (error) {
             console.error('Error:', error);
             removeTypingIndicator(typingIndicator);
@@ -942,21 +1080,33 @@
         }
     });
 
+    function closeChat() {
+        chatContainer.classList.add('closing');
+        chatContainer.addEventListener('animationend', function handler() {
+            chatContainer.classList.remove('open', 'closing');
+            chatContainer.removeEventListener('animationend', handler);
+            showResumeNotification();
+        }, { once: true });
+    }
+
     // Toggle bubble
     toggleButton.addEventListener('click', () => {
-        chatContainer.classList.toggle('open');
-        // Hide notification badge when chat opens
-        if (notificationBadge && chatContainer.classList.contains('open')) {
-            notificationBadge.remove();
-            notificationBadge = null;
+        if (chatContainer.classList.contains('open')) {
+            closeChat();
+        } else {
+            chatContainer.classList.add('open');
+            clearUnread();
+            if (notificationBadge) {
+                notificationBadge.remove();
+                notificationBadge = null;
+            }
         }
     });
 
     // Close buttons
     chatContainer.querySelectorAll('.close-button').forEach(button => {
         button.addEventListener('click', () => {
-            chatContainer.classList.remove('open');
-            chatContainer.classList.toggle('close');
+            closeChat();
         });
     });
 
