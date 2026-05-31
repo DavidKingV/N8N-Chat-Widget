@@ -1,5 +1,6 @@
 // Chat Widget Script
 (function() {
+    function init() {
     // Create and inject styles
     const styles = `
         .n8n-chat-widget {
@@ -1157,4 +1158,11 @@
     endConversationBtn.addEventListener('click', () => {
         resetToWelcomeScreen();
     });
+    } // end init()
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 })();
