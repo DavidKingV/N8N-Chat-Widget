@@ -802,13 +802,8 @@
         widgetContainer.appendChild(notificationBadge);
 
         if (config.sounds.notificationSound) {
-            const playOnInteraction = () => {
-                playSound('notification');
-                ['click', 'keydown', 'scroll', 'touchstart'].forEach(ev =>
-                    document.removeEventListener(ev, playOnInteraction)
-                );
-            };
-            ['click', 'keydown', 'scroll', 'touchstart'].forEach(ev =>
+            const playOnInteraction = () => playSound('notification');
+            ['click', 'keydown', 'touchstart'].forEach(ev =>
                 document.addEventListener(ev, playOnInteraction, { once: true, passive: true })
             );
         }
@@ -921,14 +916,33 @@
     }
 
     // ─── Audio ───
+    let _audioCtx = null;
+
+    function getAudioCtx() {
+        try {
+            if (!_audioCtx) {
+                _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (_audioCtx.state === 'suspended') {
+                _audioCtx.resume();
+            }
+        } catch (e) {}
+        return _audioCtx;
+    }
+
+    // Unlock the shared context on the first real user gesture
+    ['click', 'keydown', 'touchstart'].forEach(ev =>
+        document.addEventListener(ev, () => getAudioCtx(), { once: true, passive: true })
+    );
+
     function playSound(type) {
         try {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const ctx = getAudioCtx();
+            if (!ctx) return;
             const gain = ctx.createGain();
             gain.connect(ctx.destination);
 
             if (type === 'notification') {
-                // Two-tone friendly chime: low then high
                 [[520, 0, 0.12], [780, 0.13, 0.18]].forEach(([freq, start, end]) => {
                     const osc = ctx.createOscillator();
                     osc.type = 'sine';
@@ -941,7 +955,6 @@
                     osc.stop(ctx.currentTime + end + 0.05);
                 });
             } else {
-                // Single soft pop for incoming message
                 const osc = ctx.createOscillator();
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(640, ctx.currentTime);
@@ -952,8 +965,6 @@
                 osc.start(ctx.currentTime);
                 osc.stop(ctx.currentTime + 0.25);
             }
-
-            setTimeout(() => ctx.close(), 600);
         } catch (e) {}
     }
 
