@@ -836,7 +836,6 @@
             : config.container;
         if (resolved instanceof HTMLElement) {
             mountTarget = resolved;
-            mountTarget.style.position = 'relative';
             widgetContainer.classList.add('in-container');
         }
     }
