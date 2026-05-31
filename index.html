@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo — Chat Widget</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f0;
+            color: #222;
+            min-height: 100vh;
+        }
+
+        /* ── Fake nav ── */
+        nav {
+            background: #705600;
+            color: #fff;
+            padding: 0 32px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        nav .logo {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #D4AF37;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 24px;
+        }
+
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            opacity: 0.85;
+        }
+
+        nav ul li a:hover {
+            opacity: 1;
+        }
+
+        /* ── Hero ── */
+        .hero {
+            background: linear-gradient(135deg, #705600 0%, #D4AF37 100%);
+            color: #fff;
+            text-align: center;
+            padding: 80px 20px 60px;
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .hero p {
+            font-size: 18px;
+            opacity: 0.9;
+            max-width: 560px;
+            margin: 0 auto 32px;
+        }
+
+        .hero .btn {
+            display: inline-block;
+            background: #fff;
+            color: #705600;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 15px;
+        }
+
+        /* ── Content ── */
+        .content {
+            max-width: 900px;
+            margin: 48px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+        }
+
+        .card h2 {
+            font-size: 18px;
+            color: #705600;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .card.wide {
+            grid-column: 1 / -1;
+        }
+
+        /* ── Footer ── */
+        footer {
+            text-align: center;
+            padding: 24px;
+            font-size: 13px;
+            color: #999;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 48px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Fake site -->
+    <nav>
+        <span class="logo">ESMEFIS</span>
+        <ul>
+            <li><a href="#">Inicio</a></li>
+            <li><a href="#">Cursos</a></li>
+            <li><a href="#">Nosotros</a></li>
+            <li><a href="#">Contacto</a></li>
+        </ul>
+    </nav>
+
+    <div class="hero">
+        <h1>Escuela de Medicina Física</h1>
+        <p>Formación de excelencia en fisioterapia, rehabilitación y ciencias de la salud.</p>
+        <a href="#" class="btn">Ver programas</a>
+    </div>
+
+    <div class="content">
+        <div class="card">
+            <h2>Licenciatura en Fisioterapia</h2>
+            <p>Programa de 8 semestres con enfoque clínico y práctico. Titulación con valor oficial ante la SEP.</p>
+        </div>
+        <div class="card">
+            <h2>Posgrado en Rehabilitación</h2>
+            <p>Especialización para profesionales de la salud con módulos presenciales e intensivos los fines de semana.
+            </p>
+        </div>
+        <div class="card">
+            <h2>Cursos de Actualización</h2>
+            <p>Talleres cortos en técnicas manuales, electroterapia, kinesiotape y más. Inscripciones abiertas.</p>
+        </div>
+        <div class="card">
+            <h2>Clínica de Rehabilitación</h2>
+            <p>Atención a pacientes bajo supervisión docente. Citas disponibles de lunes a viernes de 8 a 18 h.</p>
+        </div>
+        <div class="card wide">
+            <h2>¿Tienes dudas? Habla con Valeria</h2>
+            <p>Nuestra asistente virtual está disponible para orientarte sobre admisiones, costos, horarios y más. Haz
+                clic en la burbuja dorada en la esquina inferior derecha para iniciar una conversación.</p>
+        </div>
+    </div>
+
+    <footer>
+        © 2026 ESMEFIS — Escuela de Medicina Física · Desarrollado por <a href="https://aiethereus.com"
+            style="color:#705600;">AIethereus</a>
+    </footer>
+
+    <!-- Chat Widget Config -->
+    <script>
+        window.ChatWidgetConfig = {
+            webhook: {
+                url: 'https://unif-n8n.up.railway.app/webhook/703e9c79-c969-41e6-a4be-8a5743ee5c80/chat',
+                route: 'general'
+            },
+            branding: {
+                logo: 'https://esmefis.edu.mx/wp-content/uploads/2026/04/vale.png',
+                name: 'Valeria - ESMEFIS',
+                welcomeText: 'Soy Valeria ¿Como puedo ayudarte?',
+                responseTimeText: 'Respondo en unos segundos',
+                poweredBy: {
+                    text: 'Desarrollado por AIethereus',
+                    link: 'https://aiethereus.com'
+                }
+            },
+            style: {
+                primaryColor: '#705600',
+                secondaryColor: '#D4AF37',
+                position: 'right',
+                backgroundColor: '#ffffff',
+                fontColor: '#333333'
+            },
+            bubble: {
+                color: '#D4AF37',
+                secondaryColor: '#d62839',
+                notificationMessage: '¡Hola! ¿Necesitas ayuda? 💬'
+            },
+            newChatButton: {
+                text: 'Escríbeme tus dudas',
+                color: '#2a9d8f',
+                secondaryColor: '#264653'
+            },
+            i18n: {
+                inputPlaceholder: 'Escribe tu mensaje...',
+                sendButton: 'Enviar',
+                errorMessage: 'Algo salió mal. Intenta de nuevo',
+                endConversation: 'Terminar conversación',
+                greetingMessage: 'Soy Valeria ¿Cómo puedo ayudarte?',
+                resumeMessage: 'Aquí sigo 😊'
+            },
+            sounds: {
+                notificationSound: true,  // Chime al aparecer la burbuja de notificación
+                messageSound: true        // Pop suave al recibir respuesta con el chat cerrado
+            }
+        };
+    </script>
+    <script src="n8nchat.js"></script>
+
+</body>
+
+</html>

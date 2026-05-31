@@ -30,6 +30,17 @@
             font-family: inherit;
         }
 
+        .n8n-chat-widget.in-container .chat-container {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+        }
+
+        .n8n-chat-widget.in-container .chat-container.position-left {
+            right: auto;
+            left: 20px;
+        }
+
         .n8n-chat-widget .chat-container.position-left {
             right: auto;
             left: 20px;
@@ -399,6 +410,10 @@
             animation: n8n-bubble-pulse 2.5s ease-in-out infinite;
         }
 
+        .n8n-chat-widget.in-container .chat-toggle {
+            position: absolute;
+        }
+
         .n8n-chat-widget .chat-toggle.position-left {
             right: auto;
             left: 20px;
@@ -456,6 +471,10 @@
             right: auto;
             left: 20px;
             border-radius: 12px 12px 12px 0;
+        }
+
+        .n8n-chat-widget.in-container .bubble-notification {
+            position: absolute;
         }
 
         .n8n-chat-widget .bubble-notification .badge-close {
@@ -632,7 +651,8 @@
         },
         session: {
             persist: true
-        }
+        },
+        container: null  // CSS selector or HTMLElement — mounts widget with position:absolute inside this element (needs position:relative)
     };
 
     // Merge user config with defaults
@@ -645,7 +665,8 @@
             newChatButton: { ...defaultConfig.newChatButton, ...window.ChatWidgetConfig.newChatButton },
             i18n: { ...defaultConfig.i18n, ...window.ChatWidgetConfig.i18n },
             sounds: { ...defaultConfig.sounds, ...(window.ChatWidgetConfig.sounds || {}) },
-            session: { ...defaultConfig.session, ...window.ChatWidgetConfig.session }
+            session: { ...defaultConfig.session, ...window.ChatWidgetConfig.session },
+            container: window.ChatWidgetConfig.container ?? defaultConfig.container
         } : defaultConfig;
 
     // Prevent multiple initializations
@@ -807,7 +828,19 @@
         });
     }
 
-    document.body.appendChild(widgetContainer);
+    // Resolve mount target
+    let mountTarget = document.body;
+    if (config.container) {
+        const resolved = typeof config.container === 'string'
+            ? document.querySelector(config.container)
+            : config.container;
+        if (resolved instanceof HTMLElement) {
+            mountTarget = resolved;
+            mountTarget.style.position = 'relative';
+            widgetContainer.classList.add('in-container');
+        }
+    }
+    mountTarget.appendChild(widgetContainer);
 
     // ─── References ───
     const newChatBtn = chatContainer.querySelector('.new-chat-btn');
